@@ -31,3 +31,6 @@ HEADERS += \
 
 FORMS += \
     QtStackedWidget.ui
+
+RESOURCES += \
+    res.qrc

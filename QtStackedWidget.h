@@ -12,9 +12,8 @@
 class MoveAni
 {
 private:
+    QWidget *pWidget;
     QLabel *lblGrab;
-    QPropertyAnimation *pAniGrab;
-    QPropertyAnimation *pAniCome;
     QParallelAnimationGroup *pGroup;
 
 public:
@@ -25,22 +24,16 @@ public:
         VERTICAL_MOVE
     };
 
-    MoveAni(QWidget *pThis)
+    MoveAni(QWidget *parentObj)
     {
-        lblGrab = new QLabel(pThis);
-        pAniGrab = new QPropertyAnimation();
-        pAniCome = new QPropertyAnimation();
+        pWidget = parentObj;
+        lblGrab = Q_NULLPTR;
         pGroup = new QParallelAnimationGroup();
     }
 
     ~MoveAni()
     {
-        delete lblGrab;
-        lblGrab = Q_NULLPTR;
-        delete pAniGrab;
-        pAniGrab = Q_NULLPTR;
-        delete pAniCome;
-        pAniCome = Q_NULLPTR;
+        MoveAniClear();
         delete pGroup;
         pGroup = Q_NULLPTR;
     }
@@ -49,19 +42,24 @@ public:
     /*
      * 执行页面移动效果(核心方法)
      * direction: 移动方向，取自 MoveDirection 中的定义
-     * pSW: 移动对象stackedWidget
      * isUpLeft: 是否 向左(横移) or 向上(纵移) 移动
+     * pSW : 移动对象 QStackedWidget
+     * index: pSW 对象待切换的页面索引号
      */
-    void DoMove(int direction, QStackedWidget *pSW, bool isUpLeft)
+    void DoMove(int direction, bool isUpLeft, QStackedWidget *pSW, int index)
     {
         qDebug() << "pSW->size() : " << pSW->size();
 
+        lblGrab = new QLabel(pWidget);
         lblGrab->resize(pSW->size());
-        lblGrab->setPixmap(pSW->grab());
+        QPixmap pixmap = pSW->grab();
+        pixmap.scaled(lblGrab->width(), lblGrab->height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        lblGrab->setPixmap(pixmap);
         lblGrab->show();
 
         int ratio = isUpLeft ? (-1) : 1;
 
+        QPropertyAnimation *pAniGrab = new QPropertyAnimation();
         pAniGrab->setTargetObject(lblGrab);
         pAniGrab->setPropertyName("geometry");
         pAniGrab->setDuration(ANI_DURATION);
@@ -69,10 +67,10 @@ public:
         if (direction == HORIZONTAL_MOVE) {
             pAniGrab->setEndValue(QRect(-pSW->width() * ratio, pSW->y(), pSW->width(), pSW->height()));
         } else {
-            pAniGrab->setEndValue(QRect(pSW->x(),  -pSW->height() * ratio, pSW->width(), pSW->height()));
+            pAniGrab->setEndValue(QRect(pSW->x(),  (-1) * pSW->height() * ratio, pSW->width(), pSW->height()));
         }
 
-
+        QPropertyAnimation *pAniCome = new QPropertyAnimation();
         pAniCome->setTargetObject(pSW);
         pAniCome->setPropertyName("geometry");
         pAniCome->setDuration(ANI_DURATION);
@@ -83,9 +81,22 @@ public:
         }
         pAniCome->setEndValue(pSW->geometry());
 
+        /* setCurrentIndex 动作应放在动画start之前， 放在pAniCome位置设定好之后，可以避免画面闪现的问题 */
+        pSW->setCurrentIndex(index);
+
         pGroup->addAnimation(pAniGrab);
         pGroup->addAnimation(pAniCome);
         pGroup->start();
+    }
+
+    void MoveAniClear()
+    {
+        if (lblGrab != Q_NULLPTR) {
+            delete lblGrab;
+            lblGrab = Q_NULLPTR;
+        }
+
+        pGroup->clear();
     }
 };
 
@@ -110,6 +121,7 @@ private:
 
 private slots:
     void HandlePageMove();
+    void HandleArrowPageMove();
     void on_radioBtnH_clicked();
     void on_radioBtnV_clicked();
 };

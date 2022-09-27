@@ -1,0 +1,39 @@
+QWidget#stackedWidget{ background: transparent; border: none; }
+
+QLabel{
+    background:transparent;
+    border: none;
+    color: black;
+    font-size: 14px;
+    font-family: Microsoft Yahei;
+}
+
+/* QTabWidget 样式设置 */
+QTabWidget::pane
+{
+    top:10px;
+    border: none;
+}
+
+QTabBar::tab
+{
+    background:transparent;
+    color: #0F0F0F;
+    border-bottom: none;
+    font-family: Microsoft Yahei;
+    font-size:14px;
+    padding-left:5px;
+    padding-right:5px;
+    min-width: 120px;
+    min-height:30px;
+}
+
+QTabBar::tab:selected
+{
+    border-bottom: 3px solid #10a0e8;
+    background:transparent;
+    color: black;
+    font-size: 16px;
+    font-weight: bold;
+}
+
